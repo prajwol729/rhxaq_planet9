@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Event Registration System</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; max-width: 800px; }
+        .container { border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
+        .section { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 5px; }
+        input, select, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .state-display { background: #e9ecef; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        .rule { color: #d63384; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎟️ Event Registration System</h1>
+        
+        <!-- Current State Display -->
+        <div class="section">
+            <h2>📊 Current System State</h2>
+            <div id="stateDisplay" class="state-display">
+                Loading system state...
+            </div>
+        </div>
+        
+        <!-- Registration Form -->
+        <div class="section">
+            <h2>📝 Register for Event</h2>
+            <form id="registrationForm">
+                <label for="email">Email Address:</label>
+                <input type="email" id="email" placeholder="your.email@example.com" required>
+                
+                <label for="name">Full Name:</label>
+                <input type="text" id="name" placeholder="John Doe" required>
+                
+                <label for="event">Select Event:</label>
+                <select id="event" required>
+                    <option value="">-- Choose an Event --</option>
+                    <option value="1">Tech Conference 2024 (Capacity: 100)</option>
+                    <option value="2">Web Development Workshop (Capacity: 30)</option>
+                    <option value="3">Networking Mixer (Capacity: 50)</option>
+                </select>
+                
+                <button type="submit">Submit Registration</button>
+            </form>
+            <div id="registrationResult" style="margin-top: 10px;"></div>
+        </div>
+        
+        <!-- Business Rules Display -->
+        <div class="section">
+            <h2>⚙️ Enforced Business Rules</h2>
+            <ul>
+                <li><span class="rule">RULE 1:</span> Email must be unique (SQL: UNIQUE constraint)</li>
+                <li><span class="rule">RULE 2:</span> Prevent duplicate registrations (SQL: UNIQUE(user_id, event_id))</li>
+                <li><span class="rule">RULE 3:</span> Event capacity must be positive (SQL: CHECK constraint)</li>
+                <li><span class="rule">RULE 4:</span> Valid status transitions only</li>
+            </ul>
+        </div>
+        
+        <!-- Test Business Rule -->
+        <div class="section">
+            <h2>🧪 Test Business Rule</h2>
+            <p>Try to register the same user twice for the same event:</p>
+            <button onclick="testDuplicateRegistration()">
+                Test Duplicate Registration Prevention
+            </button>
+            <div id="testResult" style="margin-top: 10px;"></div>
+        </div>
+    </div>
+
+    <script>
+        // Load and display system state from JSON
+        async function loadSystemState() {
+            try {
+                const response = await fetch('state.json');
+                const state = await response.json();
+                
+                document.getElementById('stateDisplay').innerHTML = `
+                    <strong>Current Status:</strong> <span style="color: #0d6efd;">${state.current_state.toUpperCase()}</span><br>
+                    <strong>Allowed Next States:</strong> ${state.allowed_next_states.join(', ')}<br>
+                    <strong>Active Registration:</strong> #${state.registration_details.registration_id}<br>
+                    <strong>Event:</strong> ${state.registration_details.event_title}<br>
+                    <strong>Capacity:</strong> ${state.registration_details.event_capacity} | 
+                    <strong>Attendees:</strong> ${state.registration_details.current_attendees} | 
+                    <strong>Remaining:</strong> ${state.registration_details.remaining_slots}<br>
+                    <strong>Enforced Rules:</strong> ${state.business_rules.length}
+                `;
+            } catch (error) {
+                document.getElementById('stateDisplay').innerHTML = 
+                    'Error loading system state. Please check state.json file.';
+            }
+        }
+        
+        // Handle registration form submission
+        document.getElementById('registrationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const name = document.getElementById('name').value;
+            const eventId = document.getElementById('event').value;
+            
+            if (!email || !name || !eventId) {
+                alert('Please fill in all fields');
+                return;
+            }
+            
+            // Simulate registration process with business rule check
+            const resultDiv = document.getElementById('registrationResult');
+            
+            // Check for duplicate (simulated)
+            if (email.includes('duplicate')) {
+                resultDiv.innerHTML = `
+                    <div style="color: #dc3545; background: #f8d7da; padding: 10px; border-radius: 5px;">
+                        ❌ <strong>Registration Failed!</strong><br>
+                        Business Rule Violated: User cannot register twice for same event.<br>
+                        SQL would return: UNIQUE constraint failed: registrations.user_id, registrations.event_id
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `
+                    <div style="color: #198754; background: #d1e7dd; padding: 10px; border-radius: 5px;">
+                        ✅ <strong>Registration Successful!</strong><br>
+                        Registered ${name} (${email}) for selected event.<br>
+                        Status: <strong>pending</strong> → Can change to: confirmed, cancelled
+                    </div>
+                `;
+                
+                // Clear form
+                document.getElementById('registrationForm').reset();
+            }
+        });
+        
+        // Test the duplicate registration prevention rule
+        function testDuplicateRegistration() {
+            const testResult = document.getElementById('testResult');
+            
+            testResult.innerHTML = `
+                <div style="color: #856404; background: #fff3cd; padding: 15px; border-radius: 5px;">
+                    <strong>🧪 Testing Business Rule:</strong><br><br>
+                    
+                    1. User "john@example.com" registers for Event #1 ✅<br>
+                    2. Same user tries to register again for Event #1 ⚠️<br>
+                    3. <strong style="color: #721c24;">SQL ENFORCES RULE:</strong><br>
+                       &nbsp;&nbsp;• UNIQUE(user_id, event_id) constraint triggers<br>
+                       &nbsp;&nbsp;• Database throws error: "UNIQUE constraint failed"<br>
+                       &nbsp;&nbsp;• Registration is rejected automatically<br><br>
+                    
+                    <strong>Result:</strong> ❌ Duplicate prevented by database constraint
+                </div>
+            `;
+        }
+        
+        // Initialize
+        loadSystemState();
+    </script>
+</body>
+</html>

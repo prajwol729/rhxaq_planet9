@@ -1,0 +1,19 @@
+{
+  "system": "event_registration",
+  "current_state": "pending",
+  "allowed_next_states": ["confirmed", "cancelled"],
+  "registration_details": {
+    "registration_id": 101,
+    "user_email": "john@example.com",
+    "event_title": "Tech Conference 2024",
+    "event_capacity": 100,
+    "current_attendees": 85,
+    "remaining_slots": 15
+  },
+  "business_rules": [
+    "Email must be unique for each user",
+    "Event capacity must be positive",
+    "User cannot register twice for same event",
+    "Status must be one of: pending, confirmed, cancelled, waitlisted"
+  ]
+}
